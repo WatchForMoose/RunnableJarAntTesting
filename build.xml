@@ -9,6 +9,7 @@
 	<property name="build.dir" value="${basedir}/build/classes" />
 	<property name="lib.dir" value="${basedir}/src/main/resource" />
 
+	<property name="jar.dir" value="${basedir}/kit" />
 	<property name="jar.file" value="example.jar" />
 
 	<property name="main-class" value="Main" />
@@ -43,35 +44,51 @@
 		<delete dir="${build.dir}" />
 	</target>
 
-	<target name="build">
+	<target name="build" depends="init">
 		<echo message="${ant.project.name}: ${ant.file}" />
 		<javac debug="true" debuglevel="${debuglevel}" destdir="build/classes" includeantruntime="false" source="${source}" target="${target}">
 			<src path="${src.dir}" />
 			<src path="${lib.dir}" />
 			<classpath refid="TestProject.classpath" />
+			<classpath refid="libraries.path" />
 		</javac>
 	</target>
 
 
-	<target name="jar" depends="build">
-		<mkdir dir="${basedir}" />
-		<mkdir dir="${build.dir}/${lib.dir}" />
-		<copy todir="${build.dir}/${lib.dir}" flatten="true">
+	<target name="kit" depends="build">
+		<mkdir dir="${jar.dir}" />
+		<mkdir dir="${jar.dir}/lib" />
+		<copy todir="${jar.dir}/lib" flatten="true">
 			<path refid="libraries.path" />
 		</copy>
+
+
 
 		<manifestclasspath property="manifest.classpath" jarfile="${jar.file}">
 			<classpath refid="libraries.path" />
 		</manifestclasspath>
 
-		<echo>${manifest.classpath}</echo>
 
-		<jar destfile="${jar.file}" basedir="${class.dir}">
+		<pathconvert property="mf.classpath" refid="libraries.path" pathsep=" ">
+			<map from="${lib.dir}" to="lib/" />
+			<flattenmapper />
+		</pathconvert>
+
+		<echo>${manifest.classpath}</echo>
+		<echo>${mf.classpath}</echo>
+
+		<echo>Jarring to ${jar.dir}\${jar.file}</echo>
+		<jar destfile="${jar.dir}/${jar.file}" basedir="${build.dir}" excludes="**/*.jar">
+
 			<manifest>
 				<attribute name="Main-Class" value="${main-class}" />
 				<attribute name="Class-Path" value="${manifest.classpath}" />
 			</manifest>
 		</jar>
+	</target>
+
+	<target name="clean-kit">
+		<delete dir="${jar.dir}" />
 	</target>
 
 
